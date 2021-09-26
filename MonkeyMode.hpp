@@ -15,9 +15,9 @@
 #include <vector>
 #include <deque>
 
-struct PlayMode : Mode {
-	PlayMode();
-	virtual ~PlayMode();
+struct MonkeyMode : Mode {
+	MonkeyMode();
+	virtual ~MonkeyMode();
 
 	//functions called by main loop:
 	virtual bool handle_event(SDL_Event const &, glm::uvec2 const &window_size) override;
@@ -30,7 +30,7 @@ struct PlayMode : Mode {
 	struct Button {
 		uint8_t downs = 0;
 		uint8_t pressed = 0;
-	} left, right, down, up;
+	} left, right, down, up, jump;
 
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
@@ -43,11 +43,17 @@ struct PlayMode : Mode {
 	glm::quat upper_leg_base_rotation;
 	glm::quat lower_leg_base_rotation;
 	float wobble = 0.0f;
-
-	glm::vec3 get_leg_tip_position();
+	
+	
+	//player monkey
+	Scene::Transform *player = nullptr;
+	glm::quat player_rotation;
+	bool canJump = true;			// cannot jump when in air
+	
+	glm::vec3 get_player_position();
 
 	//music coming from the tip of the leg (as a demonstration):
-	std::shared_ptr< Sound::PlayingSample > leg_tip_loop;
+	std::shared_ptr< Sound::PlayingSample > player_loop;
 	
 	//camera:
 	Scene::Camera *camera = nullptr;
