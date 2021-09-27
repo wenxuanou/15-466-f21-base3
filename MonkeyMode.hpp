@@ -34,20 +34,13 @@ struct MonkeyMode : Mode {
 
 	//local copy of the game scene (so code can change it during gameplay):
 	Scene scene;
-
-	//hexapod leg to wobble:
-	Scene::Transform *hip = nullptr;
-	Scene::Transform *upper_leg = nullptr;
-	Scene::Transform *lower_leg = nullptr;
-	glm::quat hip_base_rotation;
-	glm::quat upper_leg_base_rotation;
-	glm::quat lower_leg_base_rotation;
-	float wobble = 0.0f;
 	
+	//cube info
+	vector< Scene::Transform* > cubes = {nullptr};
 	
 	//player monkey
 	Scene::Transform *player = nullptr;
-	glm::quat player_rotation;
+	glm::quat player_base_rotation;
 	bool canJump = true;			// cannot jump when in air
 	
 	glm::vec3 get_player_position();

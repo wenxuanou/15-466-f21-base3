@@ -16,6 +16,8 @@
 #include "data_path.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/string_cast.hpp>
+
 
 #include <random>
 
@@ -53,22 +55,22 @@ MonkeyMode::MonkeyMode() : scene(*playground_scene) {
 		
 		if(transform.name == "Player") player = &transform;
 		
+		if(transform.name.find("Cube") != string::npos) {
+			cubes.push_back(&transform);
+		}
+		
 	}
 	
 	if (player == nullptr) throw std::runtime_error("Player not found.");
 	
-	player_rotation = player->rotation;
+	player_base_rotation = player->rotation;
 
 	//get pointer to camera for convenience:
 	if (scene.cameras.size() != 1) throw std::runtime_error("Expecting scene to have exactly one camera, but it has " + std::to_string(scene.cameras.size()));
 	camera = &scene.cameras.front();
 
 	//start music loop playing:
-	// (note: position will be over-ridden in update())
-	
-	//TODO: change this
 	player_loop = Sound::loop_3D(*dusty_floor_sample, 1.0f, get_player_position(), 10.0f);
-	
 }
 
 MonkeyMode::~MonkeyMode() {
@@ -132,11 +134,10 @@ bool MonkeyMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_siz
 				evt.motion.xrel / float(window_size.y),
 				-evt.motion.yrel / float(window_size.y)
 			);
-			//TODO: change this
-			player_rotation = glm::normalize(
-				player_rotation
-				* glm::angleAxis(-motion.x * camera->fovy, glm::vec3(0.0f, 1.0f, 0.0f))		//TODO: check if this works
-				//* glm::angleAxis(motion.y * camera->fovy, glm::vec3(1.0f, 0.0f, 0.0f))
+			camera->transform->rotation = glm::normalize(
+				camera->transform->rotation
+				* glm::angleAxis(-motion.x * camera->fovy, glm::vec3(0.0f, 1.0f, 0.0f))
+				* glm::angleAxis(motion.y * camera->fovy, glm::vec3(1.0f, 0.0f, 0.0f))
 			);
 			return true;
 		}
@@ -149,26 +150,34 @@ void MonkeyMode::update(float elapsed) {
 	
 	player_loop->set_position(get_player_position(), 1.0f/60.0f);
 	
-	//move camera:
+	//move player:
 	{
 
 		//combine inputs into a move:
 		constexpr float PlayerSpeed = 30.0f;
-		glm::vec2 move = glm::vec2(0.0f);
-		if (left.pressed && !right.pressed) move.x = 1.0f;
-		if (!left.pressed && right.pressed) move.x = -1.0f;
+		float degree = 0.0f;
+		glm::vec3 move = glm::vec3(0.0f);
+		if (left.pressed && !right.pressed) degree += 5.0f;
+		if (!left.pressed && right.pressed) degree -= 5.0f;
 		if (down.pressed && !up.pressed) move.y = 1.0f;
 		if (!down.pressed && up.pressed) move.y = -1.0f;
 
 		//make it so that moving diagonally doesn't go faster:
-		if (move != glm::vec2(0.0f)) move = glm::normalize(move) * PlayerSpeed * elapsed;
+		if (move != glm::vec3(0.0f)) move = glm::normalize(move) * PlayerSpeed * elapsed;
+		
+		std::cout << "degree: " << degree << std::endl;
+		player->rotation = player_base_rotation * glm::angleAxis(glm::radians(degree), glm::vec3(0.0f, 0.0f, 1.0f));
+		player_base_rotation = player->rotation;
+		
+		std::cout<<glm::to_string(player->rotation)<<std::endl;
+		
 		
 		glm::mat4x3 frame = player->make_local_to_parent();
-		glm::vec3 right = frame[0];
-		glm::vec3 up = frame[1];
-//		glm::vec3 forward = -frame[2];
-
-		player->position += move.x * right + move.y * up;
+//		glm::vec3 right = frame[0];
+		glm::vec3 forward = frame[1];
+//		glm::vec3 up = -frame[2];
+		player->position += move.y * forward;
+		
 		
 		
 	}
