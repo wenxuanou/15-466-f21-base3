@@ -162,10 +162,9 @@ void MonkeyMode::update(float elapsed) {
 		if (down.pressed && !up.pressed) move.y = 1.0f;
 		if (!down.pressed && up.pressed) move.y = -1.0f;
 		if(jump.pressed) {
-			std::cout << "pressed space" << std::endl;
 //			canJump = false;
-//			v_up += 5.0f;
-			move.z = 1.0f;
+			v_up = 7.0f;
+//			move.z = 1.0f;
 		}
 
 		//make it so that moving diagonally doesn't go faster:
@@ -178,62 +177,32 @@ void MonkeyMode::update(float elapsed) {
 	
 	{
 		//collision
+		//TODO: need better way iterate through instances
 		for(int i = 0; i < cubes.size(); i++){
-//			glm::vec3 min = glm::max(cubes[i]->position - cubes[i]->scale, player->position - player->scale);
-//			glm::vec3 max = glm::min(cubes[i]->position + cubes[i]->scale, player->position + player->scale);
-//
-//
-//			if(min.z > max.z && min.x > max.x && min.y > max.y){
-//				move.z = (-10.0f > (v_up * elapsed - 0.5 * 9.8 * elapsed * elapsed)) ? -10.0f : (v_up * elapsed - 0.5 * 9.8 * elapsed * elapsed);
-//			}else{
-//				move.z = 0.0f;
-//				v_up = 0.0f;
+			glm::vec3 min = glm::max(cubes[i]->position - cubes[i]->scale, player->position - player->scale);
+			glm::vec3 max = glm::min(cubes[i]->position + cubes[i]->scale, player->position + player->scale);
+
+			
+			glm::vec3 cubes_max = cubes[i]->position + cubes[i]->scale;
+			glm::vec3 player_min = player->position - player->scale;
+			
+			// if not above this cube
+			if(min.x > max.x || min.y > max.y){
+				continue;
+			}
+			
+			if(cubes_max.z < player_min.z){
+				//above ground
+				move.z = v_up * elapsed - 0.5 * 9.8 * elapsed * elapsed;
+				v_up -= 9.8 * elapsed;
+			}else{
+				// hit bottom, bounce up
+				v_up = std::abs(v_up) * 0.8f;
+//				v_up = (std::abs(v_up) * 0.5f < 0.01f) ? 0.0f : std::abs(v_up) * 0.5f;
+				move.z = v_up * elapsed - 0.5 * 9.8 * elapsed * elapsed;
+//				move.z = (std::abs(move.z) < 0.01f) ? 0.0f : move.z;
 //				canJump = true;
-//			}
-			
-			
-			
-//			//if no overlap, no collision:
-//			if (min.x > max.x || min.y > max.y || min.z > max.z) continue;
-			
-			
-			
-//			if(max.x - min.x > max.y - min.y){
-//				//wider overlap in x => bounce in y direction:
-//				if(player->position.y > cubes[i]->position.y){
-//					player->position.y = cubes[i]->position.y + cubes[i]->scale.y + player->scale.y;
-//					move.y = std::abs(move.y);
-//					if(min.z < max.z){
-//						player->position.z = cubes[i]->position.z + cubes[i]->scale.z + player->scale.z;
-//						move.z = 0;
-//					}
-//				}else{
-//					player->position.y = cubes[i]->position.y - cubes[i]->scale.y - player->scale.y;
-//					move.y = -1.0f * std::abs(move.y);
-//					if(min.z < max.z){
-//						player->position.z = cubes[i]->position.z + cubes[i]->scale.z + player->scale.z;
-//						move.z = 0;
-//					}
-//				}
-//			}else{
-//				//wider overlap in y => bounce in x direction:
-//				if(player->position.x > cubes[i]->position.x){
-//					player->position.x = cubes[i]->position.x + cubes[i]->scale.x + player->scale.x;
-//					move.x = std::abs(move.x);
-//					if(min.z < max.z){
-//						player->position.z = cubes[i]->position.z + cubes[i]->scale.z + player->scale.z;
-//						move.z = 0;
-//					}
-//				}else{
-//					player->position.x = cubes[i]->position.x - cubes[i]->scale.x - player->scale.x;
-//					move.x = -1.0f * std::abs(move.x);
-//					if(min.z < max.z){
-//						player->position.z = cubes[i]->position.z + cubes[i]->scale.z + player->scale.z;
-//						move.z = 0;
-//					}
-//				}
-//			}
-			
+			}
 		}
 		 
 	}
@@ -243,10 +212,9 @@ void MonkeyMode::update(float elapsed) {
 		glm::mat4x3 frame = player->make_local_to_world();
 	//		glm::vec3 right = frame[0];
 		glm::vec3 forward = frame[1];
-		glm::vec3 up = -frame[2];
+		glm::vec3 up = frame[2];
 		player->position += move.y * forward + move.z * up;
-		player->position += move.y * forward + move.z;
-//		std::cout << "move.z * up: " << glm::to_string(move.z * up) << std::endl;
+//		std::cout << v_up << std::endl;
 	}
 	
 	
