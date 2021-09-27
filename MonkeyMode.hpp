@@ -36,7 +36,7 @@ struct MonkeyMode : Mode {
 	Scene scene;
 	
 	//cube info
-	vector< Scene::Transform* > cubes = {nullptr};
+	std::vector< Scene::Transform* > cubes = {nullptr};
 	
 	//player monkey
 	Scene::Transform *player = nullptr;

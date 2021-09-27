@@ -55,7 +55,7 @@ MonkeyMode::MonkeyMode() : scene(*playground_scene) {
 		
 		if(transform.name == "Player") player = &transform;
 		
-		if(transform.name.find("Cube") != string::npos) {
+		if(transform.name.find("Cube") != std::string::npos) {
 			cubes.push_back(&transform);
 		}
 		
@@ -152,7 +152,6 @@ void MonkeyMode::update(float elapsed) {
 	
 	//move player:
 	{
-
 		//combine inputs into a move:
 		constexpr float PlayerSpeed = 30.0f;
 		float degree = 0.0f;
@@ -165,12 +164,9 @@ void MonkeyMode::update(float elapsed) {
 		//make it so that moving diagonally doesn't go faster:
 		if (move != glm::vec3(0.0f)) move = glm::normalize(move) * PlayerSpeed * elapsed;
 		
-		std::cout << "degree: " << degree << std::endl;
 		player->rotation = player_base_rotation * glm::angleAxis(glm::radians(degree), glm::vec3(0.0f, 0.0f, 1.0f));
 		player_base_rotation = player->rotation;
-		
-		std::cout<<glm::to_string(player->rotation)<<std::endl;
-		
+				
 		
 		glm::mat4x3 frame = player->make_local_to_parent();
 //		glm::vec3 right = frame[0];
