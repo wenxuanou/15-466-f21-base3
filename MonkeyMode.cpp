@@ -98,9 +98,9 @@ bool MonkeyMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_siz
 			down.downs += 1;
 			down.pressed = true;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_KP_SPACE) {
+		} else if (evt.key.keysym.sym == SDLK_SPACE) {
 			// press space
-			jump.downs = 1;
+			jump.downs += 1;
 			jump.pressed = true;
 			return true;
 		}
@@ -117,10 +117,10 @@ bool MonkeyMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_siz
 		} else if (evt.key.keysym.sym == SDLK_s) {
 			down.pressed = false;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_KP_SPACE) {
+		} else if (evt.key.keysym.sym == SDLK_SPACE) {
 			// space release
 			jump.pressed = false;
-			return false;
+			return true;
 		}
 	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
 		if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
@@ -139,6 +139,7 @@ bool MonkeyMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_siz
 				* glm::angleAxis(-motion.x * camera->fovy, glm::vec3(0.0f, 1.0f, 0.0f))
 				* glm::angleAxis(motion.y * camera->fovy, glm::vec3(1.0f, 0.0f, 0.0f))
 			);
+						
 			return true;
 		}
 	}
@@ -154,12 +155,18 @@ void MonkeyMode::update(float elapsed) {
 	{
 		//combine inputs into a move:
 		constexpr float PlayerSpeed = 30.0f;
+		move = glm::vec3(0.0f);
 		float degree = 0.0f;
-		glm::vec3 move = glm::vec3(0.0f);
 		if (left.pressed && !right.pressed) degree += 5.0f;
 		if (!left.pressed && right.pressed) degree -= 5.0f;
 		if (down.pressed && !up.pressed) move.y = 1.0f;
 		if (!down.pressed && up.pressed) move.y = -1.0f;
+		if(jump.pressed) {
+			std::cout << "pressed space" << std::endl;
+//			canJump = false;
+//			v_up += 5.0f;
+			move.z = 1.0f;
+		}
 
 		//make it so that moving diagonally doesn't go faster:
 		if (move != glm::vec3(0.0f)) move = glm::normalize(move) * PlayerSpeed * elapsed;
@@ -167,17 +174,84 @@ void MonkeyMode::update(float elapsed) {
 		player->rotation = player_base_rotation * glm::angleAxis(glm::radians(degree), glm::vec3(0.0f, 0.0f, 1.0f));
 		player_base_rotation = player->rotation;
 				
-		
-		glm::mat4x3 frame = player->make_local_to_parent();
-//		glm::vec3 right = frame[0];
-		glm::vec3 forward = frame[1];
-//		glm::vec3 up = -frame[2];
-		player->position += move.y * forward;
-		
-		
-		
 	}
-
+	
+	{
+		//collision
+		for(int i = 0; i < cubes.size(); i++){
+//			glm::vec3 min = glm::max(cubes[i]->position - cubes[i]->scale, player->position - player->scale);
+//			glm::vec3 max = glm::min(cubes[i]->position + cubes[i]->scale, player->position + player->scale);
+//
+//
+//			if(min.z > max.z && min.x > max.x && min.y > max.y){
+//				move.z = (-10.0f > (v_up * elapsed - 0.5 * 9.8 * elapsed * elapsed)) ? -10.0f : (v_up * elapsed - 0.5 * 9.8 * elapsed * elapsed);
+//			}else{
+//				move.z = 0.0f;
+//				v_up = 0.0f;
+//				canJump = true;
+//			}
+			
+			
+			
+//			//if no overlap, no collision:
+//			if (min.x > max.x || min.y > max.y || min.z > max.z) continue;
+			
+			
+			
+//			if(max.x - min.x > max.y - min.y){
+//				//wider overlap in x => bounce in y direction:
+//				if(player->position.y > cubes[i]->position.y){
+//					player->position.y = cubes[i]->position.y + cubes[i]->scale.y + player->scale.y;
+//					move.y = std::abs(move.y);
+//					if(min.z < max.z){
+//						player->position.z = cubes[i]->position.z + cubes[i]->scale.z + player->scale.z;
+//						move.z = 0;
+//					}
+//				}else{
+//					player->position.y = cubes[i]->position.y - cubes[i]->scale.y - player->scale.y;
+//					move.y = -1.0f * std::abs(move.y);
+//					if(min.z < max.z){
+//						player->position.z = cubes[i]->position.z + cubes[i]->scale.z + player->scale.z;
+//						move.z = 0;
+//					}
+//				}
+//			}else{
+//				//wider overlap in y => bounce in x direction:
+//				if(player->position.x > cubes[i]->position.x){
+//					player->position.x = cubes[i]->position.x + cubes[i]->scale.x + player->scale.x;
+//					move.x = std::abs(move.x);
+//					if(min.z < max.z){
+//						player->position.z = cubes[i]->position.z + cubes[i]->scale.z + player->scale.z;
+//						move.z = 0;
+//					}
+//				}else{
+//					player->position.x = cubes[i]->position.x - cubes[i]->scale.x - player->scale.x;
+//					move.x = -1.0f * std::abs(move.x);
+//					if(min.z < max.z){
+//						player->position.z = cubes[i]->position.z + cubes[i]->scale.z + player->scale.z;
+//						move.z = 0;
+//					}
+//				}
+//			}
+			
+		}
+		 
+	}
+	
+	{
+		// take move
+		glm::mat4x3 frame = player->make_local_to_world();
+	//		glm::vec3 right = frame[0];
+		glm::vec3 forward = frame[1];
+		glm::vec3 up = -frame[2];
+		player->position += move.y * forward + move.z * up;
+		player->position += move.y * forward + move.z;
+//		std::cout << "move.z * up: " << glm::to_string(move.z * up) << std::endl;
+	}
+	
+	
+	
+	
 	{ //update listener to camera position:
 		
 		glm::mat4x3 frame = player->make_local_to_parent();
@@ -191,6 +265,7 @@ void MonkeyMode::update(float elapsed) {
 	right.downs = 0;
 	up.downs = 0;
 	down.downs = 0;
+	jump.downs = 0;
 }
 
 void MonkeyMode::draw(glm::uvec2 const &drawable_size) {

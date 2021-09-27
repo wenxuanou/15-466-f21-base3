@@ -36,12 +36,16 @@ struct MonkeyMode : Mode {
 	Scene scene;
 	
 	//cube info
-	std::vector< Scene::Transform* > cubes = {nullptr};
+	std::vector< Scene::Transform* > cubes;
 	
 	//player monkey
 	Scene::Transform *player = nullptr;
 	glm::quat player_base_rotation;
 	bool canJump = true;			// cannot jump when in air
+	glm::vec3 move = glm::vec3(0.0f);
+	float v_up = 0.0f;				// vertical velocity of player
+
+
 	
 	glm::vec3 get_player_position();
 
