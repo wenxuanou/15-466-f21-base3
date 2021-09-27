@@ -1,8 +1,8 @@
-# (TODO: your game's title)
+# Monkey Jump
 
-Author: (TODO: your name)
+Author: Wenxuan Ou
 
-Design: (TODO: In two sentences or fewer, describe what is new and interesting about your game.)
+Design: The game terrain changes with music rhythm.
 
 Screen Shot:
 
@@ -10,9 +10,9 @@ Screen Shot:
 
 How To Play:
 
-(TODO: describe the controls and (if needed) goals/strategy.)
+WASD for forward, backward, turn left, and turn right. Mouse to adjust camera.
 
-Sources: (TODO: list a source URL for any assets you did not create yourself. Make sure you have a license for the asset.)
+Sources: Monkey comes from Blender build-in asset. Music from base code.
 
 This game was built with [NEST](NEST.md).
 
