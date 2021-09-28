@@ -6,7 +6,7 @@ Design: The game terrain changes with music rhythm.
 
 Screen Shot:
 
-![Screen Shot](screenshot.png)
+![Screen Shot](gameplay.png)
 
 How To Play:
 
