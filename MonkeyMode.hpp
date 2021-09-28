@@ -44,13 +44,17 @@ struct MonkeyMode : Mode {
 	bool onGround = true;			// cannot jump when in air
 	glm::vec3 move = glm::vec3(0.0f);
 	float v_up = 0.0f;				// vertical velocity of player
-
-
 	
 	glm::vec3 get_player_position();
 
 	//music coming from the tip of the leg (as a demonstration):
 	std::shared_ptr< Sound::PlayingSample > player_loop;
+	float timeStamp = 0.0f;		//record how much time has pass since play start, in seconds
+	float soundLength = 0.0f;	//total length of sound, in seconds
+	float totalAvgPower = 0.0f;	//approx totoal average power
+	float cubeCD = 1.0f;
+	float cubeChangeRecord = 0.0f;
+	
 	
 	//camera:
 	Scene::Camera *camera = nullptr;

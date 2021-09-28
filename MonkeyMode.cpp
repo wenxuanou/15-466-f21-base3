@@ -77,6 +77,12 @@ MonkeyMode::MonkeyMode() : scene(*playground_scene) {
 	
 	//start music loop playing:
 	player_loop = Sound::loop_3D(*dusty_floor_sample, 1.0f, get_player_position(), 10.0f);
+	soundLength = dusty_floor_sample->data.size() / 48000.0f;		// get lenght of sound
+	totalAvgPower = 0.0f;		
+	for(int i = 0; i < dusty_floor_sample->data.size(); i++){
+		totalAvgPower += glm::abs(dusty_floor_sample->data[i]);
+	}
+	totalAvgPower /= dusty_floor_sample->data.size();
 }
 
 MonkeyMode::~MonkeyMode() {
@@ -168,7 +174,7 @@ void MonkeyMode::update(float elapsed) {
 		if (down.pressed && !up.pressed) move.y = 1.0f;
 		if (!down.pressed && up.pressed) move.y = -1.0f;
 		if(jump.pressed && onGround) {
-			v_up = 7.0f;
+			v_up = 10.0f;
 			onGround = false;
 		}
 
@@ -199,14 +205,50 @@ void MonkeyMode::update(float elapsed) {
 	}
 	
 	{
+		//cube changing
+		//get sound power
+		int startId = glm::floor(48000.0f * timeStamp);
+		int endId = floor(startId + 48000.0f);
+		endId = (endId < dusty_floor_sample->data.size()) ? endId : dusty_floor_sample->data.size();
+		float avgPower = 0.0f;
+		for(int id = startId; id < endId; id++){
+			avgPower += glm::abs(dusty_floor_sample->data[id]);
+		}
+		avgPower /= (endId - startId);
+		
+		std::cout << "avg / total power: " << avgPower << " / " << totalAvgPower << std::endl;
+		
+//		static std::mt19937 mt;				// random select cube
+		for(int i = 0; i < cubes.size(); i++){
+//			float randNum = mt() / float(mt.max());
+							 
+			if(cubeChangeRecord >= cubeCD && avgPower >= totalAvgPower){
+				cubeChangeRecord = 0.0f;
+				
+				if(cubes[i]->scale.z == 1.0f){
+					cubes[i]->scale.z = 2.0f;
+				}else{
+					cubes[i]->scale.z -= 0.5f;
+					cubes[i]->scale.z = (cubes[i]->scale.z >= 1.0f) ? cubes[i]->scale.z : 1.0f;
+				}
+				
+			}else{
+				cubeChangeRecord += elapsed;
+			}
+		}
+	}
+	
+	
+	
+	{
 		//collision
 		//TODO: need better way iterate through instances
 		for(int i = 0; i < cubes.size(); i++){
-			glm::vec3 dir = player->position - cubes[i]->position;
+			glm::vec3 dir = player->position - (cubes[i]->position + glm::vec3(0.0f, 0.0f, cubes[i]->scale.z));
 			dir = glm::normalize(dir);
 			float cos_theta = glm::dot(dir, glm::vec3(0.0f, 0.0f, 1.0f));	// dot product
 			float degree = glm::degrees(glm::acos(cos_theta));
-			if(degree <= 45 &&
+			if(glm::abs(degree) <= 60 &&
 			   player->position.z - player->scale.z <= cubes[i]->position.z + cubes[i]->scale.z){
 				onGround = true;
 			}
@@ -215,17 +257,16 @@ void MonkeyMode::update(float elapsed) {
 		
 	}
 	
-
-	
-	
-	
-	
 	{ //update listener to camera position:
 		
 		glm::mat4x3 frame = player->make_local_to_parent();
 		glm::vec3 right = frame[0];
 		glm::vec3 at = frame[3];
 		Sound::listener.set_position_right(at, right, 1.0f / 60.0f);
+		
+		//update music timestamp
+		timeStamp += elapsed;
+		timeStamp = (timeStamp > soundLength) ? (timeStamp - soundLength) : timeStamp;
 	}
 
 	//reset button press counters:
