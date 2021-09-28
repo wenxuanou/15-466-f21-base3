@@ -41,7 +41,7 @@ struct MonkeyMode : Mode {
 	//player monkey
 	Scene::Transform *player = nullptr;
 	glm::quat player_base_rotation;
-	bool canJump = true;			// cannot jump when in air
+	bool onGround = true;			// cannot jump when in air
 	glm::vec3 move = glm::vec3(0.0f);
 	float v_up = 0.0f;				// vertical velocity of player
 
@@ -54,6 +54,8 @@ struct MonkeyMode : Mode {
 	
 	//camera:
 	Scene::Camera *camera = nullptr;
-
+	
+	//light:
+	Scene::Light *light = nullptr;
 };
 

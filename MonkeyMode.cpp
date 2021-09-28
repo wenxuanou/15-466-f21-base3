@@ -69,6 +69,12 @@ MonkeyMode::MonkeyMode() : scene(*playground_scene) {
 	if (scene.cameras.size() != 1) throw std::runtime_error("Expecting scene to have exactly one camera, but it has " + std::to_string(scene.cameras.size()));
 	camera = &scene.cameras.front();
 
+	//get pointer to light, only 1 light source
+	//TODO: add more light source
+	if (scene.lights.size() != 1) throw std::runtime_error("Expecting scene to have exactly one light, but it has " + std::to_string(scene.lights.size()));
+	light = &scene.lights.front();
+	
+	
 	//start music loop playing:
 	player_loop = Sound::loop_3D(*dusty_floor_sample, 1.0f, get_player_position(), 10.0f);
 }
@@ -161,10 +167,9 @@ void MonkeyMode::update(float elapsed) {
 		if (!left.pressed && right.pressed) degree -= 5.0f;
 		if (down.pressed && !up.pressed) move.y = 1.0f;
 		if (!down.pressed && up.pressed) move.y = -1.0f;
-		if(jump.pressed) {
-//			canJump = false;
+		if(jump.pressed && onGround) {
 			v_up = 7.0f;
-//			move.z = 1.0f;
+			onGround = false;
 		}
 
 		//make it so that moving diagonally doesn't go faster:
@@ -172,6 +177,24 @@ void MonkeyMode::update(float elapsed) {
 		
 		player->rotation = player_base_rotation * glm::angleAxis(glm::radians(degree), glm::vec3(0.0f, 0.0f, 1.0f));
 		player_base_rotation = player->rotation;
+		
+		
+		// take move
+		glm::mat4x3 frame = player->make_local_to_world();
+	//		glm::vec3 right = frame[0];
+		glm::vec3 forward = frame[1];
+		glm::vec3 up = frame[2];
+		
+		if(!onGround){
+			move.z = v_up * elapsed - 0.5f * 9.8f * elapsed * elapsed;
+			v_up -= 9.8f * elapsed;
+		}else{
+			v_up = 0.0f;
+			move.z = 0.0f;
+		}
+		
+		player->position += move.y * forward + move.z * up;
+
 				
 	}
 	
@@ -179,43 +202,20 @@ void MonkeyMode::update(float elapsed) {
 		//collision
 		//TODO: need better way iterate through instances
 		for(int i = 0; i < cubes.size(); i++){
-			glm::vec3 min = glm::max(cubes[i]->position - cubes[i]->scale, player->position - player->scale);
-			glm::vec3 max = glm::min(cubes[i]->position + cubes[i]->scale, player->position + player->scale);
-
-			
-			glm::vec3 cubes_max = cubes[i]->position + cubes[i]->scale;
-			glm::vec3 player_min = player->position - player->scale;
-			
-			// if not above this cube
-			if(min.x > max.x || min.y > max.y){
-				continue;
+			glm::vec3 dir = player->position - cubes[i]->position;
+			dir = glm::normalize(dir);
+			float cos_theta = glm::dot(dir, glm::vec3(0.0f, 0.0f, 1.0f));	// dot product
+			float degree = glm::degrees(glm::acos(cos_theta));
+			if(degree <= 45 &&
+			   player->position.z - player->scale.z <= cubes[i]->position.z + cubes[i]->scale.z){
+				onGround = true;
 			}
 			
-			if(cubes_max.z < player_min.z){
-				//above ground
-				move.z = v_up * elapsed - 0.5 * 9.8 * elapsed * elapsed;
-				v_up -= 9.8 * elapsed;
-			}else{
-				// hit bottom, bounce up
-				v_up = std::abs(v_up) * 0.8f;
-//				v_up = (std::abs(v_up) * 0.5f < 0.01f) ? 0.0f : std::abs(v_up) * 0.5f;
-				move.z = v_up * elapsed - 0.5 * 9.8 * elapsed * elapsed;
-//				move.z = (std::abs(move.z) < 0.01f) ? 0.0f : move.z;
-//				canJump = true;
-			}
 		}
-		 
+		
 	}
 	
-	{
-		// take move
-		glm::mat4x3 frame = player->make_local_to_world();
-	//		glm::vec3 right = frame[0];
-		glm::vec3 forward = frame[1];
-		glm::vec3 up = frame[2];
-		player->position += move.y * forward + move.z * up;
-//		std::cout << v_up << std::endl;
-	}
+
 	
 	
 	
@@ -243,10 +243,20 @@ void MonkeyMode::draw(glm::uvec2 const &drawable_size) {
 	//set up light type and position for lit_color_texture_program:
 	// TODO: consider using the Light(s) in the scene to do this
 	glUseProgram(lit_color_texture_program->program);
-	glUniform1i(lit_color_texture_program->LIGHT_TYPE_int, 1);
+	glUniform1i(lit_color_texture_program->LIGHT_TYPE_int, light->type);
 	glUniform3fv(lit_color_texture_program->LIGHT_DIRECTION_vec3, 1, glm::value_ptr(glm::vec3(0.0f, 0.0f,-1.0f)));
 	glUniform3fv(lit_color_texture_program->LIGHT_ENERGY_vec3, 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 0.95f)));
 	glUseProgram(0);
+	
+	// load light info
+//	glUseProgram(lit_color_texture_program->program);
+//	glUniform3fv(lit_color_texture_program->LIGHT_DIRECTION_vec3, 1, glm::value_ptr(glm::vec3(0.0f, 0.0f,-1.0f)));	// all directed alone z
+//	glUniform3fv(lit_color_texture_program->LIGHT_ENERGY_vec3, 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 0.95f)));
+//	glUniform3f(lit_color_texture_program->LIGHT_ENERGY_vec3,
+//				light->energy.x,
+//				light->energy.y,
+//				light->energy.z);
+//	glUseProgram(0);
 
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 	glClearDepth(1.0f); //1.0 is actually the default value to clear the depth buffer to, but FYI you can change it.
