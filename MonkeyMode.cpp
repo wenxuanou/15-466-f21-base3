@@ -79,7 +79,7 @@ MonkeyMode::MonkeyMode() : scene(*playground_scene) {
 	player_loop = Sound::loop_3D(*dusty_floor_sample, 1.0f, get_player_position(), 10.0f);
 	soundLength = dusty_floor_sample->data.size() / 48000.0f;		// get lenght of sound
 	totalAvgPower = 0.0f;		
-	for(int i = 0; i < dusty_floor_sample->data.size(); i++){
+	for(size_t i = 0; i < dusty_floor_sample->data.size(); i++){
 		totalAvgPower += glm::abs(dusty_floor_sample->data[i]);
 	}
 	totalAvgPower /= dusty_floor_sample->data.size();
@@ -218,9 +218,7 @@ void MonkeyMode::update(float elapsed) {
 		
 		std::cout << "avg / total power: " << avgPower << " / " << totalAvgPower << std::endl;
 		
-//		static std::mt19937 mt;				// random select cube
 		for(int i = 0; i < cubes.size(); i++){
-//			float randNum = mt() / float(mt.max());
 							 
 			if(cubeChangeRecord >= cubeCD && avgPower >= totalAvgPower){
 				cubeChangeRecord = 0.0f;
