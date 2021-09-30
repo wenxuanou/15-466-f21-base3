@@ -10,7 +10,7 @@ Screen Shot:
 
 How To Play:
 
-WASD for forward, backward, turn left, and turn right. Mouse to adjust camera.
+WASD for forward, backward, turn left, and turn right. Space to jump. Mouse to adjust camera.
 
 Sources: Monkey comes from Blender build-in asset. Music from base code.
 
